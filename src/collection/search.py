@@ -5,13 +5,15 @@ import json
 from pathlib import Path 
 
 search_queries = [
-    "Modern C++",
-    "Operating Systems",
-    "C++ systems programming",
-    "memory management C++",
-    "multithreading C++ concurrency",
-    "performance optimization C++",
-    "operating systems low level programming"
+    "C++ vs Rust",
+    "why C++ is hard",
+    "modern C++ is too complicated",
+    "systems programming discussion",
+    "memory management problems C++",
+    "performance optimization C++ discussion",
+    "multithreading bugs C++",
+    "the truth about C++",
+    "backend engineering C++"
 ]
 
 def get_yt_vids(query):
@@ -90,7 +92,8 @@ for vid in top20_vids:
 
 script_dir = Path(__file__).parent
 root_dir = script_dir.parent.parent
-output_file_path = root_dir / "data" / "raw" / "videos.json"
+#i renamed the video.json file to videos_final.json to keep track of previous version, but if you are running you can run this and it will in data/videoIds/videos.json
+output_file_path = root_dir / "data" / "videoIds" / "videos.json"
 
 with open(output_file_path, "w") as f:
     json.dump(videos, f, indent=2)
