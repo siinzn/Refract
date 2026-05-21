@@ -8,17 +8,17 @@ def getcomments(video):
     response = youtube.commentThreads().list(
       part="snippet",
       videoId=video,
-      order="relevance",
+      order="time",
       maxResults=100
     ).execute()
 
     comments = []
-    comment_count = 0
+    #comment_count = 0
 
     for item in response['items']:
-        if(comment_count >= 500):
-            break
-        comment_count += 1
+        #if(comment_count >= 500):
+            #break
+        #comment_count += 1
         #similar to video, comments are nested. it has an item -> snipper, which has a top level and inside that is another snippet of actual text strings
         comment = item['snippet']['topLevelComment']['snippet']
         comments.append([
@@ -30,7 +30,7 @@ def getcomments(video):
       ])
 
     print("step 1")
-    while(comment_count < 500):
+    while(True):
         try:
             nextPageToken = response['nextPageToken']
         except KeyError:
@@ -39,15 +39,15 @@ def getcomments(video):
         response = youtube.commentThreads().list(
             part="snippet",
             videoId = video,
-            order="relevance",
+            order="time",
             maxResults = 100,
             pageToken = nextPageToken
         ).execute()
 
         for item in response ['items']:
-            if(comment_count >= 500):
-                break
-            comment_count += 1
+            #if(comment_count >= 500):
+                #break
+            #comment_count += 1
             comment = item['snippet']['topLevelComment']['snippet']
             comments.append([
                 comment['authorDisplayName'],
@@ -73,6 +73,7 @@ def getcomments(video):
 script_dir = Path(__file__).parent
 root_dir = script_dir.parent.parent
 input_file_path = root_dir / "data" / "videoIds" / "videos_final.json"
+#my final data is called comments_final.csv. this is purely to save phases of data
 output_file_path = root_dir / "data" / "raw" / "comments.csv"
 
 with open(input_file_path, "r", encoding="utf-8") as vd:
