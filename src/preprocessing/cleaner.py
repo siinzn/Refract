@@ -4,6 +4,7 @@
 from langdetect import detect, LangDetectException
 import html
 import re
+from bs4 import BeautifulSoup
 
 class Cleaner:
 
@@ -15,7 +16,11 @@ class Cleaner:
     def remove_duplicates(self, df):
         #drop duplicates function from pandas already have a hash set so the look up is pretty fast
         return df.drop_duplicates(subset=[self.column_name])
-         
+
+    def remove_html(self, df):
+        df[self.column_name] = df[self.column_name].apply(lambda x : BeautifulSoup(x, "html.parser").get_text())
+        return df
+
     def filter_length(self, df): 
         """
         what this basically does is takes each column, then str.split() splits the sentence in each sentence as
@@ -70,7 +75,12 @@ class Cleaner:
     def run(self, df):
         df_no_duplicates = self.remove_duplicates(df)
         print("removed duplicates")
-        df_length_filtered = self.filter_length(df_no_duplicates)
+        if self.source == "stackoverflow":
+            df_no_html = self.remove_html(df_no_duplicates)
+            print("removed html elements")
+            df_length_filtered = self.filter_length(df_no_html)
+        else:
+            df_length_filtered = self.filter_length(df_no_duplicates)
         print("length filtered")
         df_lang_filtered = self.filter_language(df_length_filtered)
         print("language duplicates")
