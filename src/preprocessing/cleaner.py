@@ -37,7 +37,7 @@ class Cleaner:
                 return True
             else: 
                 try: 
-                    detect(text) == 'en' 
+                    return detect(text) == 'en' 
                 except LangDetectException: 
                     return False 
 
@@ -56,6 +56,8 @@ class Cleaner:
         df['text_clean'] = df['text_clean'].str.replace(r'https?://\S+|www\.\S+', '', regex=True)  # to remove urls http or www
         df['text_clean'] = df['text_clean'].str.replace(r'@\w+', '', regex=True)  # to remove mentions
         df['text_clean'] = df['text_clean'].str.replace(r'[\u2028\u2029\u202f]', ' ', regex=True)  # to remove uni code
+        df['text_clean'] = df['text_clean'].str.replace(r'Day \d+', '', regex=True)  # Remove "Day 1", "Day 42", etc
+        df['text_clean'] = df['text_clean'].str.replace(r'\d+:\d+', '', regex=True)  # Remove timestamps like "12:30"
         df['text_clean'] = df['text_clean'].str.replace(r'\s+', ' ', regex=True).str.strip()  # to remove whitespace
 
         df['source'] = self.source
@@ -64,7 +66,11 @@ class Cleaner:
         
     def run(self, df):
         df_no_duplicates = self.remove_duplicates(df)
+        print("removed duplicates")
         df_length_filtered = self.filter_length(df_no_duplicates)
+        print("length filtered")
         df_lang_filtered = self.filter_language(df_length_filtered)
+        print("language duplicates")
         df_clean_text = self.text_clean(df_lang_filtered)
+        print("cleaned text")
         return df_clean_text;
