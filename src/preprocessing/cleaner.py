@@ -31,6 +31,9 @@ class Cleaner:
 
         Below code is ai helped code(i coudlnt understand what i was doing wrong) its basically using a helper function
         as in true or false, and then uses .apply to filter out which one is english and which one isnt
+
+        Future improvement : add multiprocessing to make langdetect run faster, although its not required since the
+        youtube comments ran below 10 seconds, its just nice to know about and have
         """
         def is_english(text: str):
             if text.isascii():
