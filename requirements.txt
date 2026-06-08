@@ -6,3 +6,5 @@ beautifulsoup4
 vaderSentiment
 transformers
 torch
+numpy
+keybert

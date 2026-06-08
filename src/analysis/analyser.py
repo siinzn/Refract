@@ -1,6 +1,6 @@
 from vaderSentiment.vaderSentiment import SentimentIntensityAnalyzer
 from transformers import pipeline
-import pandas as pd
+from keybert import KeyBERT
 #MAIN THING THINK ABOUT WHERE I CAN HAVE DATA STRUCUTRE, BUT BEFORE IMPLEMENTING IT CHECK IF SOME FUNCTIONS HAVE 
 
 class Analyser:
@@ -13,7 +13,8 @@ class Analyser:
         else:
             self.MODEL = f"Cloudy1225/stackoverflow-roberta-base-sentiment"
             self.roberta_pipeline = pipeline(task="sentiment-analysis", model=self.MODEL, truncation=True)
-
+        
+        self.kw_model = KeyBERT()
 
     """
     for youtube comments dataset, i will be using VADER, vader works best for short in terms of word count.
@@ -44,8 +45,17 @@ class Analyser:
         return df
 
     def keyword_extraction(self, df):
-        pass
-
+        """
+        when i apply keybert i get a list of tuples, and thats sorted by score. i take the top 5 using top_n=5, but how do i save it? the column keywords is going to be a list
+        but till now i didnt save anything in a list for columns using df[keywords], okay so whatever the fucntion returns is stored in keyword column, basically i just return 
+        a list from keybert and then a list will be stored in the column, but if keybert function returns a string, string will be stored in the column, HELLA WEIRD LANGUAGE
+        """
+        batch = df[self.column_name].tolist()
+        keywords = self.kw_model.extract_keywords(batch, keyphrase_ngram_range=(1,2), stop_words="english",top_n=5)
+        keywords_extracted = [[item[0] for item in kw_list] for kw_list in keywords]
+        df['keyword'] = keywords_extracted
+        return df
+        
     def named_entity(self, df):
         pass
 
@@ -56,4 +66,5 @@ class Analyser:
         pass
 
     def run(self, df):
-        pass
+        sentiment = self.sentiment_analysis(df)
+        keywords = self.keyword_extraction(sentiment)
