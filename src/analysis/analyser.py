@@ -1,6 +1,7 @@
 from vaderSentiment.vaderSentiment import SentimentIntensityAnalyzer
 from transformers import pipeline
 from keybert import KeyBERT
+import spacy
 #MAIN THING THINK ABOUT WHERE I CAN HAVE DATA STRUCUTRE, BUT BEFORE IMPLEMENTING IT CHECK IF SOME FUNCTIONS HAVE 
 
 class Analyser:
@@ -15,6 +16,32 @@ class Analyser:
             self.roberta_pipeline = pipeline(task="sentiment-analysis", model=self.MODEL, truncation=True)
         
         self.kw_model = KeyBERT()
+        
+        """
+        for spacy, i used en_core_web_md to meet at the middle, en_core_web_sm was not good for my dataset, and larger 
+        models were not needed, so i stuck with this. i had to add custom entities(claude recommended) since
+        the model may not be know certain words, also note for self, these models are heavy and if defined in the function
+        they would be run on every iteration, thatd slowed down the whole process.
+        """
+        self.nlp = spacy.load('en_core_web_md')
+        self.ruler = self.nlp.add_pipe("entity_ruler", before="ner")
+        TECH_ENTITIES = [
+        "C++", "C", "Rust", "Python", "Go", "Assembly", "Fortran",
+        "LLVM", "GCC", "Clang", "MSVC", "ICC",
+        "Linux", "Windows", "macOS", "Unix", "POSIX",
+        "RAII", "vtable", "syscall", "mmap", "malloc", "free",
+        "OpenMP", "pthreads", "MPI",
+        "CMake", "Make", "Ninja",
+        "valgrind", "sanitizer", "gdb", "perf",
+        "STL", "Boost", "libc", "glibc",
+        "x86", "ARM", "RISC-V",
+        "Docker", "Git",
+        "undefined behavior", "memory leak", "dangling pointer",
+        "smart pointer", "borrow checker", "garbage collection",
+        "stack overflow", "heap allocation", "cache miss"
+        ]
+        patterns = [{"label": "TECH", "pattern": entity} for entity in TECH_ENTITIES]
+        self.ruler.add_patterns(patterns)
 
     """
     for youtube comments dataset, i will be using VADER, vader works best for short in terms of word count.
@@ -57,7 +84,17 @@ class Analyser:
         return df
         
     def named_entity(self, df):
-        pass
+        """
+        the same as keywords, batching is more efficient than passing row by row. spacy gives a weird output tbh, 
+        im not 100% about the var entities, i know what it does but dont really get the syntax. essentially,
+        nlp.pipe(bacth) returns [Doc1, Doc2, Doc3...] this list is looped through -> doc, and then inside each doc ->
+        loop through the entities, inside each entities extract the ent.text. hella weird syntax but this is apparently
+        the best way to get the best performance. there is ai involvment in that line of code :(
+        """
+        batch = df[self.column_name].tolist()
+        entities = [[ent.text for ent in doc.ents] for doc in self.nlp.pipe(batch)]
+        df['entities'] = entities
+        return df
 
     def topic_modeling(self, df):
         pass
@@ -68,3 +105,4 @@ class Analyser:
     def run(self, df):
         sentiment = self.sentiment_analysis(df)
         keywords = self.keyword_extraction(sentiment)
+        entities = self.named_entity(keywords)
