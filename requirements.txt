@@ -11,3 +11,4 @@ keybert
 spacy
 bertopic
 sentence-transformers
+hdbscan

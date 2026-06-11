@@ -4,6 +4,9 @@ from keybert import KeyBERT
 import spacy
 from bertopic import BERTopic
 from sentence_transformers import SentenceTransformer
+from tqdm import tqdm
+from hdbscan import HDBSCAN
+from sklearn.feature_extraction.text import CountVectorizer
 #MAIN THING THINK ABOUT WHERE I CAN HAVE DATA STRUCUTRE, BUT BEFORE IMPLEMENTING IT CHECK IF SOME FUNCTIONS HAVE 
 
 class Analyser:
@@ -11,11 +14,12 @@ class Analyser:
     def __init__(self, source, column_name):
         self.source = source
         self.column_name = column_name
+        tqdm.pandas() #for progress_apply
         if self.source == "youtube":
             self.vader = SentimentIntensityAnalyzer()
         else:
             self.MODEL = f"Cloudy1225/stackoverflow-roberta-base-sentiment"
-            self.roberta_pipeline = pipeline(task="sentiment-analysis", model=self.MODEL, truncation=True)
+            self.roberta_pipeline = pipeline(task="sentiment-analysis", model=self.MODEL, truncation=True, max_length=512) #hard cut the model at 512 tokens, model is weird
 
         self.kw_model = KeyBERT()
         
@@ -46,7 +50,11 @@ class Analyser:
         self.ruler.add_patterns(patterns)
 
         self.sentence_transformer_model = SentenceTransformer('sentence-transformers/all-MiniLM-L6-v2')
-        self.topic_model = BERTopic(language="english",embedding_model=self.sentence_transformer_model ,calculate_probabilities=False)
+        self.vectorizer = CountVectorizer(stop_words='english') #topic modelling was having too many the is to etc, so adding this would be better get topics
+        self.cluster = HDBSCAN(metric='euclidean', cluster_selection_method='eom', min_cluster_size=100) #this is minimum documents need to form a topic.
+        #verbose is for visualization, rest are self explanatory
+        self.topic_model = BERTopic(language="english", embedding_model=self.sentence_transformer_model, calculate_probabilities=False, verbose=True, hdbscan_model=self.cluster, vectorizer_model=self.vectorizer)
+
 
     """
     for youtube comments dataset, i will be using VADER, vader works best for short in terms of word count.
@@ -69,9 +77,14 @@ class Analyser:
 
         else:       
             def roberta_base(text: str):
-                result = self.roberta_pipeline(text)[0]
+                """
+                each row in stackoverflow was extremely long so it took time to run(2hour+) and still it wasnt done, hence i chose the first 2000 characters in the row
+                this would not really matter because the first 2000 characters would mostly give the sentiment behind it. i have used progress_apply instead of apply asw
+                to see the progress of the model
+                """
+                result = self.roberta_pipeline(text[:2000])[0]
                 return result['label'].lower()
-            df['sentiment_label'] = df[self.column_name].apply(roberta_base)
+            df['sentiment_label'] = df[self.column_name].progress_apply(roberta_base)
             print("Roberta base sentiment applied!")
 
         return df
@@ -126,8 +139,13 @@ class Analyser:
 
     def run(self, df):
         sentiment = self.sentiment_analysis(df)
+        print("Sentiment Analysis completed")
         keywords = self.keyword_extraction(sentiment)
+        print("Keyword Extraction completed")
         entities = self.named_entity(keywords)
+        print("Named Entities completed")
         topic_modelling = self.topic_modeling(entities)
+        print("Topic Modeling completed")
         drop_null = self.drop_nulls(topic_modelling)
+        print("Dropped nulls")
         return drop_null
