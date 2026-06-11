@@ -9,3 +9,5 @@ torch
 numpy
 keybert
 spacy
+bertopic
+sentence-transformers

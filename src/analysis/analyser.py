@@ -2,6 +2,8 @@ from vaderSentiment.vaderSentiment import SentimentIntensityAnalyzer
 from transformers import pipeline
 from keybert import KeyBERT
 import spacy
+from bertopic import BERTopic
+from sentence_transformers import SentenceTransformer
 #MAIN THING THINK ABOUT WHERE I CAN HAVE DATA STRUCUTRE, BUT BEFORE IMPLEMENTING IT CHECK IF SOME FUNCTIONS HAVE 
 
 class Analyser:
@@ -14,7 +16,7 @@ class Analyser:
         else:
             self.MODEL = f"Cloudy1225/stackoverflow-roberta-base-sentiment"
             self.roberta_pipeline = pipeline(task="sentiment-analysis", model=self.MODEL, truncation=True)
-        
+
         self.kw_model = KeyBERT()
         
         """
@@ -42,6 +44,9 @@ class Analyser:
         ]
         patterns = [{"label": "TECH", "pattern": entity} for entity in TECH_ENTITIES]
         self.ruler.add_patterns(patterns)
+
+        self.sentence_transformer_model = SentenceTransformer('sentence-transformers/all-MiniLM-L6-v2')
+        self.topic_model = BERTopic(language="english",embedding_model=self.sentence_transformer_model ,calculate_probabilities=False)
 
     """
     for youtube comments dataset, i will be using VADER, vader works best for short in terms of word count.
@@ -97,12 +102,32 @@ class Analyser:
         return df
 
     def topic_modeling(self, df):
-        pass
-
+        """
+        this is a straight forward process but took sm time, basically bertopic create topic clusters which
+        can be later used to find using the topic label. below, topics return topic number or ids which categorize
+        each topic into its own. meaning topic 1 - your_brother_your_sister etc, topic 5 - kfc_pizzahut etc. if a
+        main topic id is -1 it means they cannot group it to anything basically because its meaningless
+        idea is that it categorize depending on the topic on its own. topic_info variable is a dataframe. 
+        topic_lookup is essentially creating a dataframe that is setting index as the Topic(which is the topic_id)
+        and then getting only the Name(it removed all other columns). then this is saved in topic_label by
+        looking throughou MY dataframe (topic_id) and using .map which auto matches in the topic_lookup. again
+        another day, another surprise by what python is and its syntax  
+        """
+        batch = df[self.column_name].tolist()
+        topics, _ = self.topic_model.fit_transform(batch) # 
+        topic_info = self.topic_model.get_topic_info()
+        df['topic_id'] = topics
+        topic_lookup = topic_info.set_index("Topic")["Name"]
+        df["topic_label"] = df["topic_id"].map(topic_lookup)
+        return df
+        
     def drop_nulls(self, df):
-        pass
+        return df.dropna(subset=['sentiment_label', 'keyword', 'entities', 'topic_label'])
 
     def run(self, df):
         sentiment = self.sentiment_analysis(df)
         keywords = self.keyword_extraction(sentiment)
         entities = self.named_entity(keywords)
+        topic_modelling = self.topic_modeling(entities)
+        drop_null = self.drop_nulls(topic_modelling)
+        return drop_null
