@@ -1,5 +1,5 @@
 import pandas as pd
-from src.analysis.utils import root_dir, load_dataset
+from src.utils import root_dir, load_dataset
 
 youtube = root_dir / "data" / "processed" / "comments_enriched.csv" 
 stackoverflow = root_dir / "data" / "processed" / "stackoverflow_enriched.csv"

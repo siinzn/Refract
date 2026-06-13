@@ -6,7 +6,4 @@ def load_dataset(filepath: str):
     return df
 
 script_dir = Path(__file__).parent
-root_dir = script_dir.parent.parent
-
-
-#think later how to make this global
+root_dir = script_dir.parent

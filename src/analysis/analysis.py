@@ -1,5 +1,5 @@
 from src.analysis.analyser import Analyser
-from src.analysis.utils import root_dir, load_dataset
+from src.utils import root_dir, load_dataset
 
 """
 #this is for yt comments

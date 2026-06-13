@@ -1,4 +1,4 @@
-from src.preprocessing.utils import root_dir, load_dataset
+from src.utils import root_dir, load_dataset
 from src.preprocessing.cleaner import Cleaner
 
 """
