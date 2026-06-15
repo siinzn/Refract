@@ -15,22 +15,22 @@ class Weaviate:
     using a tuple and a loop - maybe later i will do that
     """
     @staticmethod
-    def build_property(name: str, type: DataType, desc: str):
+    def build_property(name: str, type: DataType, desc: str, idxsearch: bool):
         return Property(name=name,data_type=type,description=desc,index_filterable=True,
-            index_searchable=True,vectorize_property_name=False,skip_vectorization=True)
+            index_searchable=idxsearch,vectorize_property_name=False,skip_vectorization=True)
         
     def get_properties(self):
         self.properties = [
-            self.build_property("index_id", DataType.INT, "Index ID"),
-            self.build_property("text_clean", DataType.TEXT, "Cleaned Text"),
-            self.build_property("source", DataType.TEXT, "Text Source"),
-            self.build_property("sentiment_label", DataType.TEXT, "Sentiment Label"),
-            self.build_property("sentiment_score", DataType.NUMBER, "Sentiment Score"),
-            self.build_property("topic_label", DataType.TEXT, "Topic Label"),
-            self.build_property("keyword", DataType.TEXT_ARRAY, "Keywords"),
-            self.build_property("entities", DataType.TEXT_ARRAY, "Named Entities"),
-            self.build_property("author", DataType.TEXT, "Author"),
-            self.build_property("like_count", DataType.INT, "Like Count")
+            self.build_property("index_id", DataType.INT, "Index ID", False),
+            self.build_property("text_clean", DataType.TEXT, "Cleaned Text", True),
+            self.build_property("source", DataType.TEXT, "Text Source", True),
+            self.build_property("sentiment_label", DataType.TEXT, "Sentiment Label", True),
+            self.build_property("sentiment_score", DataType.NUMBER, "Sentiment Score", False),
+            self.build_property("topic_label", DataType.TEXT, "Topic Label", True),
+            self.build_property("keyword", DataType.TEXT_ARRAY, "Keywords", True),
+            self.build_property("entities", DataType.TEXT_ARRAY, "Named Entities", True),
+            self.build_property("author", DataType.TEXT, "Author", True),
+            self.build_property("like_count", DataType.INT, "Like Count", False)
         ]
         return self.properties
 
@@ -94,6 +94,14 @@ class Weaviate:
                     "like_count": None if math.isnan(row['like_count']) else row['like_count']
                 }
                 batch.add_object(properties=object_, vector=vector_)
+
+    def check_count(self):
+        collection = self.client.collections.use("Refract")
+        result = collection.aggregate.over_all(total_count=True)
+        print(result.total_count)
+        
+    def close(self):
+        self.client.close()
     
             
 
