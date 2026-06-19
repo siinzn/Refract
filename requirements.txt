@@ -12,3 +12,9 @@ spacy
 bertopic
 sentence-transformers
 hdbscan
+tqdm
+scikit-learn
+weaviate-client
+mlflow
+langchain
+langgraph
