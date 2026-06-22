@@ -40,10 +40,13 @@ class Retrieval:
 
     def close(self):
         self.client.close()
-    
+
+"""
+tests
 retrieval = Retrieval("C++")
 semantic_result = retrieval.semantic_retrieval()
 print(semantic_result)
 hybrid_result = retrieval.hybrid_retrieval()
 print(hybrid_result)
 retrieval.close()
+"""  

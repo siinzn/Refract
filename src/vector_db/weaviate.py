@@ -95,6 +95,7 @@ class Weaviate:
                 }
                 batch.add_object(properties=object_, vector=vector_)
 
+    #not important but i wanted to know the size of the collection we made
     def check_count(self):
         collection = self.client.collections.use("Refract")
         result = collection.aggregate.over_all(total_count=True)

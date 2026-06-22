@@ -53,22 +53,19 @@ class RAG:
             #hyrbid score
             hybrid_score += h_score
         
-        topic_label_consistency = Counter(topic_label).most_common(1)[0][1] / len(self.results)  #Counter adds frequency to each element, most_common(1) gets the most count, [0][1] gets the first element's count
+        #topic_label_consistency = Counter(topic_label).most_common(1)[0][1] / len(self.results)  #Counter adds frequency to each element, most_common(1) gets the most count, [0][1] gets the first element's count
         hybrid_score = hybrid_score/ len(self.results)
-        sentiment_label_consistency = max(sentiment_label.values()) / len(self.results) #max gets the maximum value in the dict pairs
-        self.total_score = (result_count + hybrid_score + sentiment_label_consistency + topic_label_consistency) / 4 #this is to get a score between 0-1
+        #sentiment_label_consistency = max(sentiment_label.values()) / len(self.results) #max gets the maximum value in the dict pairs
+        self.total_score = (result_count + hybrid_score) / 2 #this is to get a score between 0-1
 
     def routing(self):
         self.compute_score()
         if self.total_score < self.threshold:
-            response = client.models.generate_content(
-                model="gemini-2.5-flash",
-                contents=self.query
-            )
-
+            fallback_prompt = f"You are a helpful assistant. Answer the following question clearly and concisely: {self.query}"
+            response = self.llm.invoke(fallback_prompt)
             return {
-                "answer": response.text,
-                "source": "GenAI",
+                "answer": f"I could not find a link to your question with systems programming but here is the answer for your question anyways.\n\n{response.content}",
+                "source": "Ollama fallback",
                 "confidence": self.total_score,
                 "evidence": []
             }

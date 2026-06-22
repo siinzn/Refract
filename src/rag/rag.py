@@ -1,6 +1,6 @@
 from src.rag.generator import RAG
 
-rag = RAG(query="what frustrates C++ developers about memory management", threshold=0.5)
+rag = RAG(query="after effects", threshold=0.6)
 result = rag.routing()
 print(result)
 rag.close()

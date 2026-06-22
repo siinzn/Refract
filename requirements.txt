@@ -18,3 +18,5 @@ weaviate-client
 mlflow
 langchain
 langgraph
+streamlit
+torchvision
