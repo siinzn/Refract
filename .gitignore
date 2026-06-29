@@ -4,6 +4,7 @@
 venv/
 
 mlruns
+mlflow.db
 
 projectplan/
 projectplan.md
