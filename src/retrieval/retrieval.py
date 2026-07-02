@@ -2,6 +2,7 @@ import weaviate
 from weaviate.classes import query
 from weaviate.classes.query import MetadataQuery, HybridFusion
 from src.embeddings.embedding import Embedding
+from sentence_transformers import CrossEncoder
 
 class Retrieval:
     def __init__(self, query_text):
@@ -10,6 +11,7 @@ class Retrieval:
         self.embedding = Embedding()
         self.collection = self.client.collections.use("Refract")
         self.vector_ = self.embedding.query_embedding(query_text)
+        self.cross_encoder = CrossEncoder("cross-encoder/ms-marco-MiniLM-L6-v2")
 
     def semantic_retrieval(self, k=5, threshold=0.5):
         """
@@ -37,6 +39,14 @@ class Retrieval:
             limit=limit
         )
         return [(obj.properties, obj.metadata.score) for obj in response.objects]
+    
+    def reranker(self, results):
+        if not results:
+            return results
+        pairs = [[self.query_text, res[0]['text_clean']] for res in results]
+        scores = self.cross_encoder.predict(pairs)
+        reranked = sorted(zip(results, scores), key=lambda x: x[1], reverse=True)
+        return [item[0] for item in reranked]
 
     def close(self):
         self.client.close()

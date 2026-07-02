@@ -28,9 +28,13 @@ if st.button("Ask") and query.strip():
     if evidence:
         # Extract properties from evidence
         props_list = [item[0] if isinstance(item, tuple) else item for item in evidence]
- 
+
+        if result.get("summary"):
+            st.subheader("Evidence Summary")
+            st.write(result["summary"])
+            
         st.divider()
- 
+    
         st.subheader("Sentiment Breakdown")
         st.caption("How developers feel about this topic based on retrieved discussions")
         sentiments = [p.get("sentiment_label", "neutral") for p in props_list]

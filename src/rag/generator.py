@@ -2,7 +2,6 @@ from src.retrieval.retrieval import Retrieval
 from collections import Counter
 import mlflow
 from langchain_ollama import ChatOllama
-from src.rag.genai import client
 
 mlflow.set_experiment("Refract")
 mlflow.langchain.autolog()
@@ -14,8 +13,17 @@ class RAG:
         self.limit = limit
         self.retrieval = Retrieval(query_text=self.query) 
         self.results = self.retrieval.hybrid_retrieval()
+        self.results = self.retrieval.reranker(self.results)
         self.total_score: float = 0.0
         self.llm = ChatOllama(model="llama3.2:3b", temperature=0)
+
+    def summarize_evidence(self):
+        if not self.results:
+            return "No evidence available to summarize."
+        context = "\n".join([res[0]['text_clean'] for res in self.results])
+        prompt = f"Summarize the main themes, common opinions, and any notable disagreements in these developer discussions in 2-3 sentences:\n\n{context}"
+        response = self.llm.invoke(prompt)
+        return response.content
     
     def compute_score(self):
         """
@@ -87,11 +95,14 @@ class RAG:
             f"Answer: "
         )
         response = self.llm.invoke(prompt)
+        summary = self.summarize_evidence()
+
         return {
             "answer": response.content,
             "source": sources_used,
             "confidence": self.total_score,
-            "evidence": self.results
+            "evidence": self.results,
+            "summary": summary
         }
     
     def close(self):

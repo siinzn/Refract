@@ -3,8 +3,10 @@
 .venv/
 venv/
 
-mlruns
+mlruns/
 mlflow.db
+
+__pycache__/
 
 projectplan/
 projectplan.md
