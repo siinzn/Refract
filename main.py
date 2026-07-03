@@ -10,7 +10,7 @@ query = st.text_input("Ask a question about systems programming:")
 
 if st.button("Ask") and query.strip():
     with st.spinner("Searching dataset..."):
-        rag = RAG(query=query, threshold=0.6)
+        rag = RAG(query=query, threshold=0.35)
         result = rag.routing()
         rag.close()
     
@@ -21,7 +21,7 @@ if st.button("Ask") and query.strip():
     st.write(result["source"])
 
     st.subheader("Confidence")
-    st.progress(result["confidence"])
+    st.progress(min(result["confidence"], 1.0))
     st.caption(f"{round(result['confidence'] * 100)}% confidence")
     evidence = result.get("evidence", [])
     #below is done using ai i couldnt figure out to do it. wait no im just lazy to do LMAO

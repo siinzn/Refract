@@ -29,7 +29,7 @@ class Retrieval:
         )
         return [(obj.properties, obj.metadata.certainty) for obj in response.objects]
     
-    def hybrid_retrieval(self, alpha=0.5, limit=3):
+    def hybrid_retrieval(self, alpha=0.5, limit=30):
         response = self.collection.query.hybrid(
             query=self.query_text,
             vector=self.vector_,
@@ -51,12 +51,10 @@ class Retrieval:
     def close(self):
         self.client.close()
 
-"""
-tests
+
 retrieval = Retrieval("C++")
 semantic_result = retrieval.semantic_retrieval()
 print(semantic_result)
 hybrid_result = retrieval.hybrid_retrieval()
 print(hybrid_result)
 retrieval.close()
-"""  

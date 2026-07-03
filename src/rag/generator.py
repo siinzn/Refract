@@ -7,13 +7,17 @@ mlflow.set_experiment("Refract")
 mlflow.langchain.autolog()
 
 class RAG:
-    def __init__(self, query: str, threshold, limit=5):
+    def __init__(self, query: str, threshold, limit=30):
         self.query = query
         self.threshold = threshold
         self.limit = limit
         self.retrieval = Retrieval(query_text=self.query) 
         self.results = self.retrieval.hybrid_retrieval()
-        self.results = self.retrieval.reranker(self.results)
+        yt = [r for r in self.results if r[0]['source'] == 'youtube'][:5]
+        so = [r for r in self.results if r[0]['source'] == 'stackoverflow'][:5]
+        print([r[0]['source'] for r in self.results])
+        self.results = yt + so
+        #self.results = self.retrieval.reranker(self.results)
         self.total_score: float = 0.0
         self.llm = ChatOllama(model="llama3.2:3b", temperature=0)
 
@@ -46,7 +50,7 @@ class RAG:
         if len(self.results) == 0:
             return self.total_score
         
-        result_count = len(self.results) / self.limit
+        result_count = min(len(self.results) / self.limit, 1.0)
 
         for res, h_score in self.results:
             #sentiment consistency
